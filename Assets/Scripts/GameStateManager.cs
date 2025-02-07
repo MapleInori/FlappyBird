@@ -6,6 +6,7 @@ public class GameStateManager
 {
     public static bool isStart;
     public static bool isFinish;
+    public static bool isReady;
 
     private static MainPanel mainPanel;
 
@@ -14,22 +15,31 @@ public class GameStateManager
         mainPanel = panel;
     }
 
+    public static void Ready()
+    {
+        isReady = true;
+        isStart = false;
+        isFinish = false;
+    }
+
     public static void Start()
     {
+        isReady = false;
         isStart = true;
         isFinish = false;
     }
 
     public static void Finish()
     {
-        isFinish = true;
+        isReady = false;
         isStart = false;
+        isFinish = true;
 
         mainPanel.ShowRestart();
     }
 
     public static void Restart()
     {
-        isStart = isFinish = false;
+        isStart = isFinish = isReady = false;
     }
 }

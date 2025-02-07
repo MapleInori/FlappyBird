@@ -6,6 +6,7 @@ TagManager:
   tags:
   - ground
   - pipe
+  - sky
   layers:
   - Default
   - TransparentFX
