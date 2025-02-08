@@ -19,6 +19,7 @@ public class PipeCreate : MonoBehaviour
         //Debug.Log(CameraHalfWidth);
         pipeList = new List<GameObject>();
         
+        // 也能通过协程的方式不断生成，再处理它们的销毁
         for(int i =0; i< 5;i++)
         {
             var prefab = Resources.Load<GameObject>("Prefab/PipeObj");
@@ -42,7 +43,7 @@ public class PipeCreate : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(GameStateManager.isStart)
+        if(GameStateManager.Instance.isStart)
         {
             foreach (var item in pipeList)
             {

@@ -4,42 +4,61 @@ using UnityEngine;
 
 public class GameStateManager
 {
-    public static bool isStart;
-    public static bool isFinish;
-    public static bool isReady;
+    static GameStateManager instance;
 
-    private static MainPanel mainPanel;
+    public static GameStateManager Instance
+    {
+        get 
+        { 
+            if (instance == null)
+                instance = new GameStateManager();
+            return instance; 
+        }
+    }
 
-    public static void Setup(MainPanel panel)
+    GameStateManager() { }
+
+    public bool isStart;
+    public bool isFinish;
+    public bool isReady;
+
+    private MainPanel mainPanel;
+
+    public void Setup(MainPanel panel)
     {
         mainPanel = panel;
     }
 
-    public static void Ready()
+    public void Ready()
     {
         isReady = true;
         isStart = false;
         isFinish = false;
     }
 
-    public static void Start()
+    public void Start()
     {
         isReady = false;
         isStart = true;
         isFinish = false;
     }
 
-    public static void Finish()
+    public void Finish()
     {
         isReady = false;
         isStart = false;
         isFinish = true;
 
-        mainPanel.ShowRestart();
+        mainPanel.ShowGameOverUI();
     }
 
-    public static void Restart()
+    public void Restart()
     {
         isStart = isFinish = isReady = false;
+    }
+
+    public void GetScore()
+    {
+        mainPanel.CurrentScore.text = (int.Parse(mainPanel.CurrentScore.text)+1).ToString();
     }
 }

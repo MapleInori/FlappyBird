@@ -7,19 +7,30 @@ using Unity.VisualScripting;
 
 public class MainPanel : MonoBehaviour
 {
+    // 开始界面
     public Button StartButton;
     public Button RestartButton;
-    public Button ReadyToStart;
-
     public Image Title;
     public GameObject UIPipe;
-    public BirdController birdController;
-    public PipeCreate pipeCreate;
-
     public CanvasGroup StartUI;
 
-    public Text Score;
-    public Image Tutorial;
+    // 准备界面
+    public Button ReadyToStart;    
+    public CanvasGroup Tutorial;
+
+    // 游戏界面
+    public Text CurrentScore;
+
+    // 结束界面
+    public GameObject GameOverUI;
+    public Text FinalScore;
+    public Text BestScore;
+    public Image Medal;
+    public List<Sprite> Medals;
+    public Image NewIcon;
+
+    public BirdController birdController;
+    public PipeCreate pipeCreate;
 
     private float FadeTime = 0.4f;
     private bool isClickStart;
@@ -31,12 +42,15 @@ public class MainPanel : MonoBehaviour
         RestartButton.onClick.AddListener(OnClickRestart);
         ReadyToStart.onClick.AddListener(GameStart);
 
-        RestartButton.gameObject.SetActive(false);
+        GameOverUI.gameObject.SetActive(false);
         ReadyToStart.gameObject.SetActive(false);
 
+        NewIcon.gameObject.SetActive(false);
         isClickStart = false;
 
-        GameStateManager.Setup(this);
+        CurrentScore.text = "0";
+
+        GameStateManager.Instance.Setup(this);
     }
 
     private void OnClickStart()
@@ -45,8 +59,31 @@ public class MainPanel : MonoBehaviour
         if (isClickStart) return;
         isClickStart = true;
 
-        GameStateManager.Ready();
+        GameStateManager.Instance.Ready();
+        // 恢复初始UI状态
+        NewIcon.gameObject.SetActive(false);
+        Medal.gameObject.SetActive(true);
 
+        ShowReadyUI();
+    }
+
+    public void ShowStartUI()
+    {
+        // 已被隐藏且关闭，先启用，再渐显
+        Title.gameObject.SetActive(true);
+        StartButton.gameObject.SetActive(true);
+        isClickStart = false;
+        StartUI.DOFade(1, FadeTime);
+
+        UIPipe.gameObject.SetActive(true);
+        CurrentScore.gameObject.SetActive(false);
+
+        birdController.Restart();
+        pipeCreate.Restart();
+    }
+
+    public void ShowReadyUI()
+    {
         // 隐藏UI，然后关闭UI
         StartUI.DOFade(0, FadeTime).onComplete = () =>
         {
@@ -55,40 +92,76 @@ public class MainPanel : MonoBehaviour
         };
         UIPipe.gameObject.SetActive(false);
 
-        Score.gameObject.SetActive(true);
+        CurrentScore.gameObject.SetActive(true);
+        CurrentScore.text = "0";
+
+
         Tutorial.gameObject.SetActive(true);
+        Tutorial.DOFade(1, FadeTime);
+
         ReadyToStart.gameObject.SetActive(true);
     }
 
     private void GameStart()
     {
-        GameStateManager.Start();
+        GameStateManager.Instance.Start();
         birdController.JumpOnce();
-        Tutorial.gameObject.SetActive(false);
+        Tutorial.DOFade(0, FadeTime).onComplete = () =>
+        {
+            Tutorial.gameObject.SetActive(false);
+        };
         ReadyToStart.gameObject.SetActive(false);
     }
 
     private void OnClickRestart()
     {
-        GameStateManager.Restart();
-        RestartButton.gameObject.SetActive(false);
-
-        // 已被隐藏且关闭，先启用，再渐显
-        Title.gameObject.SetActive(true);
-        StartButton.gameObject.SetActive(true);
-        isClickStart = false;
-        StartUI.DOFade(1, FadeTime);
-
-        UIPipe.gameObject.SetActive(true);
-        Score.gameObject.SetActive(false);
-
-        birdController.Restart();
-        pipeCreate.Restart();
+        GameStateManager.Instance.Restart();
+        GameOverUI.gameObject.SetActive(false);
+        ShowStartUI();
     }
 
-    public void ShowRestart()
+    //public void ShowRestart()
+    //{
+    //    RestartButton.gameObject.SetActive(true);
+    //}
+
+    public void ShowGameOverUI()
     {
-        RestartButton.gameObject.SetActive(true);
+        int score = int.Parse(CurrentScore.text);
+        CurrentScore.gameObject.SetActive(false);
+        GameOverUI.gameObject.SetActive(true);
+
+        // 最高分处理
+        if (score > PlayerPrefs.GetInt("BestScore"))
+        {
+            PlayerPrefs.SetInt("BestScore", score);
+            NewIcon.gameObject.SetActive(true);
+        }
+
+        if(score <10)
+        {
+            Medal.gameObject.SetActive(false);
+        }
+        else if(score <20 && score >=10)
+        {
+            Medal.sprite = Medals[0];
+        }
+        else if(score < 50&& score >= 20)
+        {
+             Medal.sprite = Medals[1];
+        }
+        else if(score < 100 && score >=50)
+        {
+            Medal.sprite = Medals[2];
+        }
+        else
+        {
+            Medal.sprite = Medals[3];
+        }
+
+        FinalScore.text = score.ToString();
+        BestScore.text = PlayerPrefs.GetInt("BestScore").ToString();
+
     }
 
 }

@@ -24,6 +24,7 @@ public class BirdController : MonoBehaviour
     public float RotateSpeed = 8; // 弧度
     private float JumpVelocity;
 
+
     void Start()
     {
         orgPosition = transform.position;
@@ -32,15 +33,15 @@ public class BirdController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (GameStateManager.isFinish == false && GameStateManager.isStart == false)
+        if (GameStateManager.Instance.isFinish == false && GameStateManager.Instance.isStart == false)
         {
             Idle();
         }
-        else if (GameStateManager.isStart)
+        else if (GameStateManager.Instance.isStart)
         {
             CustomGravity();
         }
-        else if(GameStateManager.isFinish)
+        else if(GameStateManager.Instance.isFinish)
         {
             HandleBirdDie();
         }
@@ -56,7 +57,7 @@ public class BirdController : MonoBehaviour
 
     private void CustomGravity()
     {
-        if (Input.GetMouseButtonDown(0) && GameStateManager.isStart)
+        if (Input.GetMouseButtonDown(0) && GameStateManager.Instance.isStart)
         {
             Velocity.y = MathF.Sqrt(JumpHeight * -2 * Gravity);
             JumpVelocity = Velocity.y;
@@ -66,7 +67,7 @@ public class BirdController : MonoBehaviour
         if (Velocity.y < MaxVelocity) Velocity.y = MaxVelocity;
         transform.position += Velocity * Time.deltaTime;
 
-        if (Velocity.y < -JumpVelocity * 0.5f)
+        if (Velocity.y < -JumpVelocity * 0.1f)
         {
             RotationZ -= RotateSpeed * Time.deltaTime * 1000 * Mathf.Deg2Rad; // 放大1000倍才显得正常，帧率太高导致deltaTime过低？
             //Debug.Log(RotateSpeed * Time.deltaTime * 1000 * Mathf.Deg2Rad);
@@ -76,51 +77,28 @@ public class BirdController : MonoBehaviour
         transform.eulerAngles = new Vector3(0, 0, RotationZ);
     }
 
-    // 没什么区别，可能因为没有用刚体的物理模拟
-    //private void CustomGravity()
-    //{
-    //    if (Input.GetMouseButtonDown(0) && GameStateManager.isStart)
-    //    {
-    //        Velocity.y = Mathf.Sqrt(JumpHeight * -2 * Gravity);
-    //        JumpVelocity = Velocity.y;
-    //        RotationZ = 30;
-
-    //        // 在跳跃开始时重置旋转动画
-    //        transform.DOKill(); // 停止所有正在进行的动画，避免冲突
-    //        transform.DORotateQuaternion(Quaternion.Euler(0, 0, RotationZ), Time.deltaTime);
-    //        // transform.DORotateQuaternion(Quaternion.Euler(0, 0, RotationZ), 0.1f);
-    //    }
-
-    //    Velocity.y += Gravity * Time.deltaTime;
-    //    if (Velocity.y < MaxVelocity) Velocity.y = MaxVelocity;
-    //    transform.position += Velocity * Time.deltaTime;
-
-    //    if (Velocity.y < -JumpVelocity * 0.5f)
-    //    {
-    //        RotationZ -= RotateSpeed * Time.deltaTime * 1000 * Mathf.Deg2Rad;
-    //        RotationZ = Mathf.Max(-90, RotationZ);
-
-    //        // 使用 DoTween 来设置新的旋转
-    //        transform.DOKill(); // 停止所有正在进行的动画，避免冲突
-    //        transform.DORotateQuaternion(Quaternion.Euler(0, 0, RotationZ), Time.deltaTime);
-    //        // transform.DORotateQuaternion(Quaternion.Euler(0, 0, RotationZ), 0.1f);
-    //    }
-    //}
-
+    // 鸟作为触发器去接触其他物体，要么是其他物体都设置为触发器检测是否碰到鸟，那么需要给每个会碰到鸟的物体写脚本。
+    // 如果碰到后那些物体需要各种处理的话，也许其他作为触发器好点，毕竟还要给它们写其他东西。
+    // 如果东西多的话，鸟要接触的东西太多了，集中在这里看起来也许不如分散到各自身上处理
     private void OnTriggerEnter2D(Collider2D collision)
     {
         //Debug.Log(collision.tag);
 
         if(collision.CompareTag("ground") || collision.CompareTag("pipe"))
         {
-            GameStateManager.Finish();
+            GameStateManager.Instance.Finish();
         }
-        if(collision.CompareTag("sky"))
+        if (collision.CompareTag("sky"))
         {
-            Velocity = new Vector3(0,-2,0);
+            Velocity = new Vector3(0, -2, 0);
+        }
+        if (collision.CompareTag("checkPoint"))
+        {
+            GameStateManager.Instance.GetScore();
         }
     }
 
+    // 防止卡进去然后穿过去
     private void OnTriggerStay2D(Collider2D collision)
     {
         if (collision.CompareTag("sky"))

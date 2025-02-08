@@ -23,7 +23,7 @@ public class BgMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (GameStateManager.isFinish) return;
+        if (GameStateManager.Instance.isFinish) return;
         GroundMone();
         BackGroundMove();
     }
