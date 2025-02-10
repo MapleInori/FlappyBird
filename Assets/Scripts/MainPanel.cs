@@ -20,6 +20,8 @@ public class MainPanel : MonoBehaviour
 
     // 游戏界面
     public Text CurrentScore;
+    public Button PauseButton;
+    public Button ResumeButton;
 
     // 结束界面
     public GameObject GameOverUI;
@@ -41,6 +43,9 @@ public class MainPanel : MonoBehaviour
         StartButton.onClick.AddListener(OnClickStart);
         RestartButton.onClick.AddListener(OnClickRestart);
         ReadyToStart.onClick.AddListener(GameStart);
+        PauseButton.onClick.AddListener(OnClickPause);
+        ResumeButton.onClick.AddListener(OnClickResume);
+
 
         GameOverUI.gameObject.SetActive(false);
         ReadyToStart.gameObject.SetActive(false);
@@ -51,6 +56,7 @@ public class MainPanel : MonoBehaviour
         CurrentScore.text = "0";
 
         GameStateManager.Instance.Setup(this);
+        GameStateManager.Instance.SetState(GameState.Start);
     }
 
     private void OnClickStart()
@@ -59,12 +65,32 @@ public class MainPanel : MonoBehaviour
         if (isClickStart) return;
         isClickStart = true;
 
-        GameStateManager.Instance.Ready();
+        //GameStateManager.Instance.Ready();
+        GameStateManager.Instance.SetState(GameState.Ready);
         // 恢复初始UI状态
         NewIcon.gameObject.SetActive(false);
         Medal.gameObject.SetActive(true);
 
         ShowReadyUI();
+    }
+
+    private void OnClickRestart()
+    {
+        GameStateManager.Instance.Restart();
+        GameOverUI.gameObject.SetActive(false);
+        ShowStartUI();
+    }
+
+    private void OnClickPause()
+    {
+        GameStateManager.Instance.SetState(GameState.Paused);
+        ResumeButton.gameObject.SetActive(true);
+    }
+
+    private void OnClickResume()
+    {
+        GameStateManager.Instance.Resume();
+        ResumeButton.gameObject.SetActive(false);
     }
 
     public void ShowStartUI()
@@ -77,6 +103,9 @@ public class MainPanel : MonoBehaviour
 
         UIPipe.gameObject.SetActive(true);
         CurrentScore.gameObject.SetActive(false);
+
+        PauseButton.gameObject.SetActive(false);
+        ResumeButton.gameObject.SetActive(false);
 
         birdController.Restart();
         pipeCreate.Restart();
@@ -104,33 +133,25 @@ public class MainPanel : MonoBehaviour
 
     private void GameStart()
     {
-        GameStateManager.Instance.Start();
-        birdController.JumpOnce();
+        GameStateManager.Instance.SetState(GameState.Playing);
+        birdController.Jump();
         Tutorial.DOFade(0, FadeTime).onComplete = () =>
         {
             Tutorial.gameObject.SetActive(false);
         };
         ReadyToStart.gameObject.SetActive(false);
-    }
 
-    private void OnClickRestart()
-    {
-        GameStateManager.Instance.Restart();
-        GameOverUI.gameObject.SetActive(false);
-        ShowStartUI();
+        PauseButton.gameObject.SetActive(true);
+        ResumeButton.gameObject.SetActive(false);
     }
-
-    //public void ShowRestart()
-    //{
-    //    RestartButton.gameObject.SetActive(true);
-    //}
 
     public void ShowGameOverUI()
     {
         int score = int.Parse(CurrentScore.text);
         CurrentScore.gameObject.SetActive(false);
         GameOverUI.gameObject.SetActive(true);
-
+        PauseButton.gameObject.SetActive(false);
+        ResumeButton.gameObject.SetActive(false);
         // 最高分处理
         if (score > PlayerPrefs.GetInt("BestScore"))
         {

@@ -14,47 +14,27 @@ public class BgMovement : MonoBehaviour
 
     [Range(0,10)]
     public float moveSpeed = 3f;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
     void Update()
     {
-        if (GameStateManager.Instance.isFinish) return;
-        GroundMone();
-        BackGroundMove();
+        if (GameStateManager.Instance.isFinish || GameStateManager.Instance.isPaused ) return;
+        MoveBackground(ground_1, ground_2);
+        MoveBackground(backGround_1, backGround_2);
+
     }
 
-    private void GroundMone()
+    private void MoveBackground(Transform obj1, Transform obj2)
     {
-        ground_1.transform.position -= new Vector3(moveSpeed * Time.deltaTime, 0, 0);
-        ground_2.transform.position -= new Vector3(moveSpeed * Time.deltaTime, 0, 0);
+        obj1.position -= new Vector3(moveSpeed * Time.deltaTime, 0, 0);
+        obj2.position -= new Vector3(moveSpeed * Time.deltaTime, 0, 0);
 
-        if (ground_1.transform.position.x < -BG_WIDTH)
+        if (obj1.position.x < -BG_WIDTH)
         {
-            ground_1.transform.position = ground_2.transform.position + new Vector3(BG_WIDTH, 0, 0);
+            obj1.position = obj2.position + new Vector3(BG_WIDTH, 0, 0);
         }
-        if (ground_2.transform.position.x < -BG_WIDTH)
+        if (obj2.position.x < -BG_WIDTH)
         {
-            ground_2.transform.position = ground_1.transform.position + new Vector3(BG_WIDTH, 0, 0);
-        }
-    }
-
-    private void BackGroundMove()
-    {
-        backGround_1.transform.position -= new Vector3(moveSpeed * Time.deltaTime, 0, 0);
-        backGround_2.transform.position -= new Vector3(moveSpeed * Time.deltaTime, 0, 0);
-
-        if (backGround_1.transform.position.x < -BG_WIDTH)
-        {
-            backGround_1.transform.position = backGround_2.transform.position + new Vector3(BG_WIDTH, 0, 0);
-        }
-        if (backGround_2.transform.position.x < -BG_WIDTH)
-        {
-            backGround_2.transform.position = backGround_1.transform.position + new Vector3(BG_WIDTH, 0, 0);
+            obj2.position = obj1.position + new Vector3(BG_WIDTH, 0, 0);
         }
     }
 }

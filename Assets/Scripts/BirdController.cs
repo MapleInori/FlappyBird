@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
+
 public class BirdController : MonoBehaviour
 {
     [Range(1, 10)]
@@ -24,20 +25,23 @@ public class BirdController : MonoBehaviour
     public float RotateSpeed = 8; // 弧度
     private float JumpVelocity;
 
+    private Collider2D preCollieder;
 
     void Start()
     {
         orgPosition = transform.position;
+        preCollieder = null;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (GameStateManager.Instance.isFinish == false && GameStateManager.Instance.isStart == false)
+        if (GameStateManager.Instance.isPaused) return;
+        if (GameStateManager.Instance.isStart || GameStateManager.Instance.isReady)
         {
             Idle();
         }
-        else if (GameStateManager.Instance.isStart)
+        else if (GameStateManager.Instance.isPlaying)
         {
             CustomGravity();
         }
@@ -57,11 +61,28 @@ public class BirdController : MonoBehaviour
 
     private void CustomGravity()
     {
-        if (Input.GetMouseButtonDown(0) && GameStateManager.Instance.isStart)
+        if ((Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) || Input.GetMouseButtonDown(0) )
         {
-            Velocity.y = MathF.Sqrt(JumpHeight * -2 * Gravity);
-            JumpVelocity = Velocity.y;
-            RotationZ = 30;
+            Vector2 clickPosition;
+
+            // 获取点击位置
+            if (Input.touchCount > 0)
+            {
+                clickPosition = Input.GetTouch(0).position; // 触摸位置
+            }
+            else
+            {
+                clickPosition = Input.mousePosition; // 鼠标位置
+            }
+
+            if (!InitSceenSize.ClickPause(clickPosition))
+            {
+                // 如果点击位置不在暂停按钮区域内，触发跳跃
+                Jump();
+            }
+            Debug.Log("没点到");
+            
+            //if (GameStateManager.Instance.isPlaying) Jump();
         }
         Velocity.y += Gravity * Time.deltaTime;
         if (Velocity.y < MaxVelocity) Velocity.y = MaxVelocity;
@@ -70,7 +91,7 @@ public class BirdController : MonoBehaviour
         if (Velocity.y < -JumpVelocity * 0.1f)
         {
             RotationZ -= RotateSpeed * Time.deltaTime * 1000 * Mathf.Deg2Rad; // 放大1000倍才显得正常，帧率太高导致deltaTime过低？
-            //Debug.Log(RotateSpeed * Time.deltaTime * 1000 * Mathf.Deg2Rad);
+
             RotationZ = Mathf.Max(-90, RotationZ);
         }
 
@@ -86,15 +107,19 @@ public class BirdController : MonoBehaviour
 
         if(collision.CompareTag("ground") || collision.CompareTag("pipe"))
         {
-            GameStateManager.Instance.Finish();
+            //GameStateManager.Instance.Finish();
+            GameStateManager.Instance.SetState(GameState.Finished);
         }
         if (collision.CompareTag("sky"))
         {
             Velocity = new Vector3(0, -2, 0);
         }
-        if (collision.CompareTag("checkPoint"))
+
+
+        if (collision.CompareTag("checkPoint") && ((preCollieder==null)|| preCollieder.GetComponent<Transform>().position != collision.GetComponent<Transform>().position))
         {
-            GameStateManager.Instance.GetScore();
+            GameStateManager.Instance.GetScore();        
+            preCollieder = collision;
         }
     }
 
@@ -124,18 +149,11 @@ public class BirdController : MonoBehaviour
         Velocity = Vector3.zero;
     }
 
-    public void JumpOnce()
+    public void Jump()
     {
         // 只跳一下应该没理由超过最大值，上边复制过来应该可以删掉if
         Velocity.y = MathF.Sqrt(JumpHeight * -2 * Gravity);
         JumpVelocity = Velocity.y;
         RotationZ = 30;
-
-        Velocity.y += Gravity * Time.deltaTime;
-        transform.position += Velocity * Time.deltaTime;
-
-        RotationZ -= RotateSpeed * Time.deltaTime * 1000 * Mathf.Deg2Rad;
-
-        transform.eulerAngles = new Vector3(0, 0, RotationZ);
     }
 }

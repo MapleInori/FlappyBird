@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 public class PipeCreate : MonoBehaviour
@@ -12,18 +10,20 @@ public class PipeCreate : MonoBehaviour
     private float Distance = 5f;
     private float CameraHalfWidth;
 
+    private GameObject pipePrefab;
     // Start is called before the first frame update
     void Start()
     {
+        pipePrefab = Resources.Load<GameObject>("Prefab/PipeObj"); // 只加载一次
+
         CameraHalfWidth = Screen.width * 1f / Screen.height * Camera.main.orthographicSize;
         //Debug.Log(CameraHalfWidth);
         pipeList = new List<GameObject>();
         
-        // 也能通过协程的方式不断生成，再处理它们的销毁
+        // 也能通过协程的方式不断生成
         for(int i =0; i< 5;i++)
         {
-            var prefab = Resources.Load<GameObject>("Prefab/PipeObj");
-            var go = GameObject.Instantiate(prefab);
+            var go = GameObject.Instantiate(pipePrefab);
             go.transform.position = new Vector3(i * Distance, Random.Range(-3f,4.5f), 0) + new Vector3(8,0,0);
             go.transform.SetParent(this.transform,true);
 
@@ -43,7 +43,7 @@ public class PipeCreate : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(GameStateManager.Instance.isStart)
+        if(GameStateManager.Instance.isPlaying)
         {
             foreach (var item in pipeList)
             {
@@ -60,6 +60,7 @@ public class PipeCreate : MonoBehaviour
                 }
 
             }
+
         }
 
     }
