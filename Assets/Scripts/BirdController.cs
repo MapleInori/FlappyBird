@@ -80,7 +80,6 @@ public class BirdController : MonoBehaviour
                 // 如果点击位置不在暂停按钮区域内，触发跳跃
                 Jump();
             }
-            Debug.Log("没点到");
             
             //if (GameStateManager.Instance.isPlaying) Jump();
         }
@@ -115,10 +114,10 @@ public class BirdController : MonoBehaviour
             Velocity = new Vector3(0, -2, 0);
         }
 
-
+        // 避免刚好接触时死亡，触发两次加分的情况
         if (collision.CompareTag("checkPoint") && ((preCollieder==null)|| preCollieder.GetComponent<Transform>().position != collision.GetComponent<Transform>().position))
         {
-            GameStateManager.Instance.GetScore();        
+            GameStateManager.Instance.GetScore();
             preCollieder = collision;
         }
     }
